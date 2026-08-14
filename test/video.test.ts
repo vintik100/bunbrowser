@@ -1,10 +1,10 @@
-import { describe, expect, it, afterAll, beforeAll } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
-import { createServer } from "../src/server.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { GifEncoder } from "../src/browser/gif_encoder.js";
+import { createServer } from "../src/server.js";
 
 describe("Video & Animation Recording Module", () => {
   let client: Client;
@@ -17,17 +17,11 @@ describe("Video & Animation Recording Module", () => {
     const { server, manager: mgr } = createServer();
     manager = mgr;
 
-    client = new Client(
-      { name: "video-test-client", version: "1.0.0" },
-      { capabilities: {} }
-    );
+    client = new Client({ name: "video-test-client", version: "1.0.0" }, { capabilities: {} });
 
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   });
 
   afterAll(async () => {
@@ -36,10 +30,14 @@ describe("Video & Animation Recording Module", () => {
     }
     // Cleanup generated test files
     if (existsSync(testGifPath)) {
-      try { unlinkSync(testGifPath); } catch {}
+      try {
+        unlinkSync(testGifPath);
+      } catch {}
     }
     if (existsSync(testWebmPath)) {
-      try { unlinkSync(testWebmPath); } catch {}
+      try {
+        unlinkSync(testWebmPath);
+      } catch {}
     }
   });
 
@@ -52,7 +50,7 @@ describe("Video & Animation Recording Module", () => {
       // Create red frame
       const redFrame = new Uint8Array(width * height * 4);
       for (let i = 0; i < redFrame.length; i += 4) {
-        redFrame[i] = 255;   // R
+        redFrame[i] = 255; // R
         redFrame[i + 1] = 0; // G
         redFrame[i + 2] = 0; // B
         redFrame[i + 3] = 255;
@@ -213,7 +211,9 @@ describe("Video & Animation Recording Module", () => {
       expect(res.content).toBeDefined();
       expect(existsSync(testGifPath)).toBe(true);
 
-      const hasImage = res.content.some((c: any) => c.type === "image" && c.mimeType === "image/gif");
+      const hasImage = res.content.some(
+        (c: any) => c.type === "image" && c.mimeType === "image/gif"
+      );
       expect(hasImage).toBe(true);
 
       const textItem = res.content.find((c: any) => c.type === "text");

@@ -14,7 +14,8 @@
 * **Install dependencies:** `bun install`
 * **Run server (stdio):** `bun start` or `bun run src/index.ts`
 * **Run tests:** `bun test`
-* **Typecheck:** `bun run check` (executes `bun tsc --noEmit`)
+* **Lint & Typecheck:** `bun run check` (executes `bun tsc --noEmit && biome check .`)
+* **Auto-format:** `bun run format` (executes `biome format --write .`)
 
 ## 4. Architecture & Directory Structure
 ```text

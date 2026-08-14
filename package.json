@@ -20,7 +20,10 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "test": "bun test",
-    "check": "bun tsc --noEmit"
+    "typecheck": "bun tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "bun tsc --noEmit && biome check ."
   },
   "keywords": [
     "mcp",
@@ -40,6 +43,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
     "@types/bun": "latest",
     "typescript": "^7.0.2"
   }

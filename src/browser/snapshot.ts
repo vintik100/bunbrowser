@@ -1,4 +1,4 @@
-import type { ElementTarget, SnapshotNode, SnapshotResult } from "./types.js";
+import type { ElementTarget } from "./types.js";
 
 /**
  * In-page JavaScript expression that scans the DOM, builds the accessibility tree,
@@ -218,14 +218,18 @@ export const SNAPSHOT_SCRIPT = `
 /**
  * Resolves an ElementTarget ({ ref, selector, x, y }) to a CSS selector or coordinates.
  */
-export function resolveTarget(target: ElementTarget): { selector?: string; x?: number; y?: number } {
+export function resolveTarget(target: ElementTarget): {
+  selector?: string;
+  x?: number;
+  y?: number;
+} {
   if (target.ref) {
     let cleanRef = target.ref.trim();
     if (cleanRef.startsWith("ref=")) {
       cleanRef = cleanRef.replace("ref=", "");
     }
     if (cleanRef.startsWith("[")) {
-      cleanRef = cleanRef.replace(/^[\[]|\]$/g, "");
+      cleanRef = cleanRef.replace(/^[[]|\]$/g, "");
     }
     return { selector: `[data-bunbrowser-ref="${cleanRef}"], [data-bunpw-ref="${cleanRef}"]` };
   }

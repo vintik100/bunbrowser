@@ -104,4 +104,3 @@ export interface AnimationRecordOptions extends RecordingOptions {
   triggerSelector?: string;
   returnBase64?: boolean;
 }
-

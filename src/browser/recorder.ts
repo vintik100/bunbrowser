@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { GifEncoder } from "./gif_encoder.js";
 import type { BrowserTab } from "./tab.js";
 import type { AnimationRecordOptions, RecordingOptions, RecordingResult } from "./types.js";
-import { GifEncoder } from "./gif_encoder.js";
 
 interface CapturedFrame {
   timestamp: number;
@@ -78,7 +78,9 @@ export class TabRecorder {
     }, intervalMs);
   }
 
-  public async stop(options: { savePath?: string; returnBase64?: boolean } = {}): Promise<RecordingResult> {
+  public async stop(
+    options: { savePath?: string; returnBase64?: boolean } = {}
+  ): Promise<RecordingResult> {
     if (!this.isRecordingActive) {
       throw new Error(`Tab '${this.tab.id}' is not currently recording.`);
     }
@@ -246,7 +248,11 @@ export class TabRecorder {
     return encoder.encode();
   }
 
-  private async encodeFramesToWebm(frames: CapturedFrame[], fps: number, durationMs: number): Promise<Uint8Array> {
+  private async encodeFramesToWebm(
+    frames: CapturedFrame[],
+    fps: number,
+    durationMs: number
+  ): Promise<Uint8Array> {
     const width = this.tab.width;
     const height = this.tab.height;
 
@@ -328,21 +334,55 @@ export class TabRecorder {
    */
   private createFallbackWebm(
     frames: CapturedFrame[],
-    width: number,
-    height: number,
-    durationMs: number
+    _width: number,
+    _height: number,
+    _durationMs: number
   ): Uint8Array {
     // EBML Header + Segment + Track + Cluster structure
     const ebmlHeader = new Uint8Array([
-      0x1a, 0x45, 0xdf, 0xa3, // EBML ID
-      0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, // Size 31
-      0x42, 0x86, 0x81, 0x01, // EBMLVersion: 1
-      0x42, 0xf7, 0x81, 0x01, // EBMLReadVersion: 1
-      0x42, 0xf2, 0x81, 0x04, // EBMLMaxIDLength: 4
-      0x42, 0xf3, 0x81, 0x08, // EBMLMaxSizeLength: 8
-      0x42, 0x82, 0x84, 0x77, 0x65, 0x62, 0x6d, // DocType: "webm"
-      0x42, 0x87, 0x81, 0x04, // DocTypeVersion: 4
-      0x42, 0x85, 0x81, 0x02, // DocTypeReadVersion: 2
+      0x1a,
+      0x45,
+      0xdf,
+      0xa3, // EBML ID
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x1f, // Size 31
+      0x42,
+      0x86,
+      0x81,
+      0x01, // EBMLVersion: 1
+      0x42,
+      0xf7,
+      0x81,
+      0x01, // EBMLReadVersion: 1
+      0x42,
+      0xf2,
+      0x81,
+      0x04, // EBMLMaxIDLength: 4
+      0x42,
+      0xf3,
+      0x81,
+      0x08, // EBMLMaxSizeLength: 8
+      0x42,
+      0x82,
+      0x84,
+      0x77,
+      0x65,
+      0x62,
+      0x6d, // DocType: "webm"
+      0x42,
+      0x87,
+      0x81,
+      0x04, // DocTypeVersion: 4
+      0x42,
+      0x85,
+      0x81,
+      0x02, // DocTypeReadVersion: 2
     ]);
 
     // Simple frame package

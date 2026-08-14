@@ -1,3 +1,5 @@
+import { TabRecorder } from "./recorder.js";
+import { resolveTarget, SNAPSHOT_SCRIPT } from "./snapshot.js";
 import type {
   AnimationRecordOptions,
   ClickOptions,
@@ -11,8 +13,6 @@ import type {
   TabInfo,
   TypeOptions,
 } from "./types.js";
-import { SNAPSHOT_SCRIPT, resolveTarget } from "./snapshot.js";
-import { TabRecorder } from "./recorder.js";
 
 export interface CreateTabOptions {
   id?: string;
@@ -163,10 +163,9 @@ export class BrowserTab {
     return result;
   }
 
-  public async screenshot(options: {
-    format?: "png" | "jpeg" | "webp";
-    quality?: number;
-  } = {}): Promise<{ base64: string; mimeType: string }> {
+  public async screenshot(
+    options: { format?: "png" | "jpeg" | "webp"; quality?: number } = {}
+  ): Promise<{ base64: string; mimeType: string }> {
     this.ensureActive();
     const format = options.format || "png";
     const quality = options.quality ?? 80;
@@ -232,7 +231,9 @@ export class BrowserTab {
     await this.view.type(text);
   }
 
-  public async fillForm(fields: Array<{ target: ElementTarget; value: string; clear?: boolean }>): Promise<void> {
+  public async fillForm(
+    fields: Array<{ target: ElementTarget; value: string; clear?: boolean }>
+  ): Promise<void> {
     this.ensureActive();
     for (const field of fields) {
       await this.type(field.target, field.value, { clear: field.clear ?? true });
@@ -294,7 +295,9 @@ export class BrowserTab {
           await this.view.evaluate("window.scrollTo({ top: 0, behavior: 'instant' })");
           return;
         case "bottom":
-          await this.view.evaluate("window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' })");
+          await this.view.evaluate(
+            "window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' })"
+          );
           return;
         case "up":
           await this.view.scroll(0, -Math.floor(this.height * 0.75));
@@ -306,7 +309,9 @@ export class BrowserTab {
     }
 
     const dx = options.deltaX ?? 0;
-    const dy = options.deltaY ?? (options.direction === "down" ? 300 : (options.direction === "up" ? -300 : 0));
+    const dy =
+      options.deltaY ??
+      (options.direction === "down" ? 300 : options.direction === "up" ? -300 : 0);
     await this.view.scroll(dx, dy);
   }
 
@@ -374,7 +379,9 @@ export class BrowserTab {
     if (format === "text") {
       return (await this.view.evaluate("document.body ? document.body.innerText : ''")) as string;
     }
-    return (await this.view.evaluate("document.documentElement ? document.documentElement.outerHTML : ''")) as string;
+    return (await this.view.evaluate(
+      "document.documentElement ? document.documentElement.outerHTML : ''"
+    )) as string;
   }
 
   public getLogs(clear = false): ConsoleLogEntry[] {
@@ -415,7 +422,12 @@ export class BrowserTab {
     }
   }
 
-  public async setCookie(cookie: { name: string; value: string; domain?: string; path?: string }): Promise<void> {
+  public async setCookie(cookie: {
+    name: string;
+    value: string;
+    domain?: string;
+    path?: string;
+  }): Promise<void> {
     this.ensureActive();
     try {
       await this.cdp("Network.setCookie", {
@@ -427,7 +439,7 @@ export class BrowserTab {
     } catch {
       await this.view.evaluate(`
         (() => {
-          document.cookie = ${JSON.stringify(`${cookie.name}=${cookie.value}; path=${cookie.path || '/'}`)};
+          document.cookie = ${JSON.stringify(`${cookie.name}=${cookie.value}; path=${cookie.path || "/"}`)};
         })()
       `);
     }
@@ -480,7 +492,10 @@ export class BrowserTab {
     await this.recorder.start(options);
   }
 
-  public async stopRecording(options?: { savePath?: string; returnBase64?: boolean }): Promise<RecordingResult> {
+  public async stopRecording(options?: {
+    savePath?: string;
+    returnBase64?: boolean;
+  }): Promise<RecordingResult> {
     this.ensureActive();
     return await this.recorder.stop(options);
   }

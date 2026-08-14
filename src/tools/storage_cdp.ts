@@ -6,7 +6,11 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
     "browser_cdp",
     "Execute a raw Chrome DevTools Protocol (CDP) command on the active tab (Chrome/Chromium backend)",
     {
-      method: z.string().describe("CDP method name (e.g. 'Network.getCookies', 'Emulation.setUserAgentOverride', 'DOM.getDocument')"),
+      method: z
+        .string()
+        .describe(
+          "CDP method name (e.g. 'Network.getCookies', 'Emulation.setUserAgentOverride', 'DOM.getDocument')"
+        ),
       params: z.record(z.any()).optional().describe("JSON parameters object for the CDP command"),
     },
     async ({ method, params }: { method: string; params?: Record<string, any> }) => {
@@ -41,7 +45,19 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
       domain: z.string().optional().describe("Cookie domain (optional for set)"),
       path: z.string().optional().describe("Cookie path (default: '/')"),
     },
-    async ({ action, name, value, domain, path }: { action: "get" | "set" | "clear"; name?: string; value?: string; domain?: string; path?: string }) => {
+    async ({
+      action,
+      name,
+      value,
+      domain,
+      path,
+    }: {
+      action: "get" | "set" | "clear";
+      name?: string;
+      value?: string;
+      domain?: string;
+      path?: string;
+    }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -87,7 +103,15 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
       key: z.string().optional().describe("Storage key name (required for set, optional for get)"),
       value: z.string().optional().describe("Storage value to set (required for set)"),
     },
-    async ({ action, key, value }: { action: "get" | "set" | "clear"; key?: string; value?: string }) => {
+    async ({
+      action,
+      key,
+      value,
+    }: {
+      action: "get" | "set" | "clear";
+      key?: string;
+      value?: string;
+    }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -95,7 +119,12 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
           const data = await tab.getLocalStorage();
           if (key) {
             return {
-              content: [{ type: "text", text: data[key] !== undefined ? data[key] : `(key '${key}' not found)` }],
+              content: [
+                {
+                  type: "text",
+                  text: data[key] !== undefined ? data[key] : `(key '${key}' not found)`,
+                },
+              ],
             };
           }
           return {

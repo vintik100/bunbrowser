@@ -1,4 +1,4 @@
-import { describe, expect, it, afterAll } from "bun:test";
+import { afterAll, describe, expect, it } from "bun:test";
 import { BrowserManager } from "../src/browser/manager.js";
 
 describe("BrowserManager", () => {

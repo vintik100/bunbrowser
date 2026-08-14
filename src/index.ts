@@ -1,6 +1,6 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createServer } from "./server.js";
 import type { BrowserConfig } from "./browser/types.js";
+import { createServer } from "./server.js";
 
 function parseArgs(): BrowserConfig {
   const args = process.argv.slice(2);

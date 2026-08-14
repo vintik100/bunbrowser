@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { BrowserManager } from "./browser/manager.js";
 import type { BrowserConfig } from "./browser/types.js";
-import { registerNavigationTools } from "./tools/navigation.js";
 import { registerInspectionTools } from "./tools/inspection.js";
 import { registerInteractionTools } from "./tools/interaction.js";
-import { registerTabTools } from "./tools/tabs.js";
-import { registerStorageCdpTools } from "./tools/storage_cdp.js";
 import { registerMetricsTools } from "./tools/metrics.js";
+import { registerNavigationTools } from "./tools/navigation.js";
+import { registerStorageCdpTools } from "./tools/storage_cdp.js";
+import { registerTabTools } from "./tools/tabs.js";
 import { registerVideoTools } from "./tools/video.js";
 
 export function createServer(config: BrowserConfig = {}) {

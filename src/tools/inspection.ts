@@ -32,10 +32,24 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
     "browser_take_screenshot",
     "VISUAL ONLY. Captures an image screenshot of the current page viewport in Base64 encoding. Use ONLY for visual design validation, canvas/image inspection, or when explicitly requested. For element discovery and reading content, use browser_snapshot instead.",
     {
-      format: z.enum(["png", "jpeg", "webp"]).optional().describe("Image format: 'png', 'jpeg', or 'webp' (default: 'png')"),
-      quality: z.number().min(0).max(100).optional().describe("Image compression quality 0-100 for jpeg/webp (default: 80)"),
+      format: z
+        .enum(["png", "jpeg", "webp"])
+        .optional()
+        .describe("Image format: 'png', 'jpeg', or 'webp' (default: 'png')"),
+      quality: z
+        .number()
+        .min(0)
+        .max(100)
+        .optional()
+        .describe("Image compression quality 0-100 for jpeg/webp (default: 80)"),
     },
-    async ({ format = "png", quality = 80 }: { format?: "png" | "jpeg" | "webp"; quality?: number }) => {
+    async ({
+      format = "png",
+      quality = 80,
+    }: {
+      format?: "png" | "jpeg" | "webp";
+      quality?: number;
+    }) => {
       try {
         const tab = await manager.getActiveTab();
         const { base64, mimeType } = await tab.screenshot({ format, quality });
@@ -66,7 +80,11 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
     "browser_evaluate",
     "Execute an arbitrary JavaScript expression in the context of the active page and serialize its return value.",
     {
-      script: z.string().describe("The JavaScript expression to evaluate (e.g. 'document.title', 'window.innerWidth', or '(() => { ... })()')"),
+      script: z
+        .string()
+        .describe(
+          "The JavaScript expression to evaluate (e.g. 'document.title', 'window.innerWidth', or '(() => { ... })()')"
+        ),
     },
     async ({ script }: { script: string }) => {
       try {
@@ -77,8 +95,8 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
           result === undefined
             ? "undefined"
             : typeof result === "object"
-            ? JSON.stringify(result, null, 2)
-            : String(result);
+              ? JSON.stringify(result, null, 2)
+              : String(result);
 
         return {
           content: [{ type: "text", text: formatted }],
@@ -96,7 +114,12 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
     "browser_get_content",
     "Retrieve raw HTML DOM source code or plain visible text of the active page.",
     {
-      format: z.enum(["html", "text"]).optional().describe("Format to return: 'html' for complete outerHTML DOM markup or 'text' for visible body innerText (default: 'html')"),
+      format: z
+        .enum(["html", "text"])
+        .optional()
+        .describe(
+          "Format to return: 'html' for complete outerHTML DOM markup or 'text' for visible body innerText (default: 'html')"
+        ),
     },
     async ({ format = "html" }: { format?: "html" | "text" }) => {
       try {
@@ -119,7 +142,10 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
     "browser_console_logs",
     "Retrieve captured console logs (log, warn, error, info) emitted by the page JavaScript context.",
     {
-      clear: z.boolean().optional().describe("Whether to clear the log buffer after retrieval (default: false)"),
+      clear: z
+        .boolean()
+        .optional()
+        .describe("Whether to clear the log buffer after retrieval (default: false)"),
     },
     async ({ clear = false }: { clear?: boolean }) => {
       try {
@@ -133,7 +159,9 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
         }
 
         const formatted = logs
-          .map((l) => `[${new Date(l.timestamp).toISOString()}] [${l.type.toUpperCase()}] ${l.text}`)
+          .map(
+            (l) => `[${new Date(l.timestamp).toISOString()}] [${l.type.toUpperCase()}] ${l.text}`
+          )
           .join("\n");
 
         return {
@@ -148,4 +176,3 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
     }
   );
 }
-

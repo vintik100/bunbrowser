@@ -1,4 +1,4 @@
-import { describe, expect, it, afterAll } from "bun:test";
+import { afterAll, describe, expect, it } from "bun:test";
 import { BrowserTab } from "../src/browser/tab.js";
 
 describe("BrowserTab Interactions", () => {
@@ -77,7 +77,9 @@ describe("BrowserTab Interactions", () => {
   });
 
   it("should capture console logs", async () => {
-    await tab.navigate("data:text/html,<script>console.log('Test Log message'); console.warn('Warning test');</script>");
+    await tab.navigate(
+      "data:text/html,<script>console.log('Test Log message'); console.warn('Warning test');</script>"
+    );
     // Wait slightly for async console event dispatch
     await tab.evaluate("1 + 1");
     const logs = tab.getLogs();

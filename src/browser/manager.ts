@@ -29,7 +29,10 @@ export class BrowserManager {
     });
   }
 
-  public async createTab(url?: string, options: Partial<CreateTabOptions> = {}): Promise<BrowserTab> {
+  public async createTab(
+    url?: string,
+    options: Partial<CreateTabOptions> = {}
+  ): Promise<BrowserTab> {
     const tabId = options.id || `tab_${this.tabCounter++}`;
     const targetUrl = url || options.url || this.config.initialUrl;
 

@@ -44,7 +44,10 @@ export function registerTabTools(server: any, manager: BrowserManager) {
       url: z.string().optional().describe("Initial URL to open in the new tab"),
       width: z.number().optional().describe("Viewport width (default: 1280)"),
       height: z.number().optional().describe("Viewport height (default: 720)"),
-      snapshot: z.boolean().optional().describe("Whether to return a snapshot of the new tab (default: true)"),
+      snapshot: z
+        .boolean()
+        .optional()
+        .describe("Whether to return a snapshot of the new tab (default: true)"),
     },
     async ({
       url,
@@ -83,7 +86,10 @@ export function registerTabTools(server: any, manager: BrowserManager) {
     "Switch the active browser context to a different tab by tabId",
     {
       tabId: z.string().describe("The ID of the tab to switch to (e.g. 'tab_1')"),
-      snapshot: z.boolean().optional().describe("Whether to return a snapshot of the switched tab (default: true)"),
+      snapshot: z
+        .boolean()
+        .optional()
+        .describe("Whether to return a snapshot of the switched tab (default: true)"),
     },
     async ({ tabId, snapshot = true }: { tabId: string; snapshot?: boolean }) => {
       try {
@@ -111,7 +117,10 @@ export function registerTabTools(server: any, manager: BrowserManager) {
     "browser_tab_close",
     "Close a browser tab (closes the active tab if tabId is omitted)",
     {
-      tabId: z.string().optional().describe("The ID of the tab to close (default: current active tab)"),
+      tabId: z
+        .string()
+        .optional()
+        .describe("The ID of the tab to close (default: current active tab)"),
     },
     async ({ tabId }: { tabId?: string }) => {
       try {
@@ -124,7 +133,9 @@ export function registerTabTools(server: any, manager: BrowserManager) {
 
         const remaining = manager.listTabs().length;
         return {
-          content: [{ type: "text", text: `Tab closed successfully. (${remaining} remaining tabs)` }],
+          content: [
+            { type: "text", text: `Tab closed successfully. (${remaining} remaining tabs)` },
+          ],
         };
       } catch (err: any) {
         return {

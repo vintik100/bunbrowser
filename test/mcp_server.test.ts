@@ -1,4 +1,4 @@
-import { describe, expect, it, afterAll, beforeAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
@@ -11,17 +11,11 @@ describe("MCP Server Integration", () => {
     const { server, manager: mgr } = createServer();
     manager = mgr;
 
-    client = new Client(
-      { name: "test-client", version: "1.0.0" },
-      { capabilities: {} }
-    );
+    client = new Client({ name: "test-client", version: "1.0.0" }, { capabilities: {} });
 
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   });
 
   afterAll(async () => {
@@ -61,7 +55,8 @@ describe("MCP Server Integration", () => {
   });
 
   it("should execute browser_navigate and return snapshot", async () => {
-    const html = "<h1>Welcome to Bunpw MCP</h1><button id='action-btn' onclick='window.__ok=1'>Click Here</button>";
+    const html =
+      "<h1>Welcome to Bunpw MCP</h1><button id='action-btn' onclick='window.__ok=1'>Click Here</button>";
     const res = (await client.callTool({
       name: "browser_navigate",
       arguments: {

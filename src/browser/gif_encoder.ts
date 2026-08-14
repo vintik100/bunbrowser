@@ -52,7 +52,22 @@ export class GifEncoder {
     // 3. Netscape 2.0 Loop Extension
     if (this.loopCount >= 0) {
       const netscape = new Uint8Array([
-        0x21, 0xff, 0x0b, 0x4e, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e, 0x30, 0x03, 0x01,
+        0x21,
+        0xff,
+        0x0b,
+        0x4e,
+        0x45,
+        0x54,
+        0x53,
+        0x43,
+        0x41,
+        0x50,
+        0x45,
+        0x32,
+        0x2e,
+        0x30,
+        0x03,
+        0x01,
         this.loopCount & 0xff,
         (this.loopCount >> 8) & 0xff,
         0x00,
@@ -62,12 +77,18 @@ export class GifEncoder {
 
     // 4. Encode each frame
     for (const frame of this.frames) {
-      const { palette, indexedPixels } = this.quantizeRgba(frame.rgbaData, frame.width, frame.height);
+      const { palette, indexedPixels } = this.quantizeRgba(
+        frame.rgbaData,
+        frame.width,
+        frame.height
+      );
 
       // Graphic Control Extension
       const delayUnits = Math.max(1, Math.round(frame.delayMs / 10)); // in 1/100s
       const gce = new Uint8Array([
-        0x21, 0xf9, 0x04,
+        0x21,
+        0xf9,
+        0x04,
         0x04, // Disposal method: 1 (do not dispose / draw over)
         delayUnits & 0xff,
         (delayUnits >> 8) & 0xff,
@@ -245,7 +266,7 @@ export class GifEncoder {
             suffixTable[insertProbe] = nextPixel;
             codeTable[insertProbe] = nextCode++;
 
-            if (nextCode > (1 << codeSize) && codeSize < 12) {
+            if (nextCode > 1 << codeSize && codeSize < 12) {
               codeSize++;
             }
           } else {

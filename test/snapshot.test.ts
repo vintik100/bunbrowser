@@ -1,6 +1,6 @@
-import { describe, expect, it, afterAll } from "bun:test";
-import { BrowserTab } from "../src/browser/tab.js";
+import { afterAll, describe, expect, it } from "bun:test";
 import { resolveTarget } from "../src/browser/snapshot.js";
+import { BrowserTab } from "../src/browser/tab.js";
 
 describe("Snapshot & Ref Engine", () => {
   const tab = new BrowserTab();

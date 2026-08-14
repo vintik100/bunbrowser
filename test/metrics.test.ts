@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
@@ -11,17 +11,11 @@ describe("Performance Metrics & Lighthouse Tools", () => {
     const { server, manager: mgr } = createServer();
     manager = mgr;
 
-    client = new Client(
-      { name: "test-metrics-client", version: "1.0.0" },
-      { capabilities: {} }
-    );
+    client = new Client({ name: "test-metrics-client", version: "1.0.0" }, { capabilities: {} });
 
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   });
 
   afterAll(async () => {

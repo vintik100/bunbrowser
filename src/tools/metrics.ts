@@ -8,10 +8,26 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
     "browser_get_metrics",
     "Extract real-time web performance metrics, Core Web Vitals (TTFB, FCP, load duration), JavaScript heap memory consumption, and network resource transfer breakdown.",
     {
-      includeResources: z.boolean().optional().describe("Whether to include the full list of loaded network resources with individual transfer sizes and durations (default: false)"),
-      includeCdp: z.boolean().optional().describe("Whether to include low-level CDP metrics like memory JSHeapUsedSize and DOM node counts (default: true)"),
+      includeResources: z
+        .boolean()
+        .optional()
+        .describe(
+          "Whether to include the full list of loaded network resources with individual transfer sizes and durations (default: false)"
+        ),
+      includeCdp: z
+        .boolean()
+        .optional()
+        .describe(
+          "Whether to include low-level CDP metrics like memory JSHeapUsedSize and DOM node counts (default: true)"
+        ),
     },
-    async ({ includeResources = false, includeCdp = true }: { includeResources?: boolean; includeCdp?: boolean }) => {
+    async ({
+      includeResources = false,
+      includeCdp = true,
+    }: {
+      includeResources?: boolean;
+      includeCdp?: boolean;
+    }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -73,20 +89,20 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
         if (includeCdp) {
           try {
             const rawMetrics = await tab.cdp("Performance.getMetrics");
-            if (rawMetrics && rawMetrics.metrics) {
+            if (rawMetrics?.metrics) {
               const metricsMap: Record<string, number> = {};
               for (const m of rawMetrics.metrics) {
                 metricsMap[m.name] = m.value;
               }
               cdpMetrics = {
-                jsHeapUsedBytes: metricsMap["JSHeapUsedSize"] || 0,
-                jsHeapTotalBytes: metricsMap["JSHeapTotalSize"] || 0,
-                domNodesCount: metricsMap["Nodes"] || 0,
-                jsEventListenersCount: metricsMap["JSEventListeners"] || 0,
-                layoutCount: metricsMap["LayoutCount"] || 0,
-                recalcStyleCount: metricsMap["RecalcStyleCount"] || 0,
-                scriptDurationSec: metricsMap["ScriptDuration"] || 0,
-                taskDurationSec: metricsMap["TaskDuration"] || 0,
+                jsHeapUsedBytes: metricsMap.JSHeapUsedSize || 0,
+                jsHeapTotalBytes: metricsMap.JSHeapTotalSize || 0,
+                domNodesCount: metricsMap.Nodes || 0,
+                jsEventListenersCount: metricsMap.JSEventListeners || 0,
+                layoutCount: metricsMap.LayoutCount || 0,
+                recalcStyleCount: metricsMap.RecalcStyleCount || 0,
+                scriptDurationSec: metricsMap.ScriptDuration || 0,
+                taskDurationSec: metricsMap.TaskDuration || 0,
               };
             }
           } catch {
@@ -119,7 +135,12 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
       } catch (err: any) {
         return {
           isError: true,
-          content: [{ type: "text", text: `Error retrieving performance metrics: ${err.message || String(err)}` }],
+          content: [
+            {
+              type: "text",
+              text: `Error retrieving performance metrics: ${err.message || String(err)}`,
+            },
+          ],
         };
       }
     }
@@ -129,8 +150,16 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
     "browser_lighthouse_audit",
     "FULL WEB QUALITY AUDIT. Computes Lighthouse scores (0-100) for Performance, Accessibility, Best Practices, and SEO. Returns actionable recommendations and diagnostics to optimize Core Web Vitals (FCP, LCP, TTFB, CLS) and user experience.",
     {
-      categories: z.array(CategoryEnum).optional().describe("Categories to audit: ['performance', 'accessibility', 'best-practices', 'seo'] (default: all)"),
-      detailed: z.boolean().optional().describe("Whether to include full check-by-check pass/fail breakdown (default: false)"),
+      categories: z
+        .array(CategoryEnum)
+        .optional()
+        .describe(
+          "Categories to audit: ['performance', 'accessibility', 'best-practices', 'seo'] (default: all)"
+        ),
+      detailed: z
+        .boolean()
+        .optional()
+        .describe("Whether to include full check-by-check pass/fail breakdown (default: false)"),
     },
     async ({
       categories = ["performance", "accessibility", "best-practices", "seo"],
@@ -344,9 +373,12 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
 
         // Filter requested categories
         const filteredScores: Record<string, number> = {};
-        if (categories.includes("performance")) filteredScores.performance = result.scores.performance;
-        if (categories.includes("accessibility")) filteredScores.accessibility = result.scores.accessibility;
-        if (categories.includes("best-practices")) filteredScores.bestPractices = result.scores.bestPractices;
+        if (categories.includes("performance"))
+          filteredScores.performance = result.scores.performance;
+        if (categories.includes("accessibility"))
+          filteredScores.accessibility = result.scores.accessibility;
+        if (categories.includes("best-practices"))
+          filteredScores.bestPractices = result.scores.bestPractices;
         if (categories.includes("seo")) filteredScores.seo = result.scores.seo;
 
         const responsePayload: any = {
@@ -359,9 +391,11 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
 
         if (detailed) {
           responsePayload.detailedChecks = {};
-          if (categories.includes("accessibility")) responsePayload.detailedChecks.accessibility = result.allChecks.accessibility;
+          if (categories.includes("accessibility"))
+            responsePayload.detailedChecks.accessibility = result.allChecks.accessibility;
           if (categories.includes("seo")) responsePayload.detailedChecks.seo = result.allChecks.seo;
-          if (categories.includes("best-practices")) responsePayload.detailedChecks.bestPractices = result.allChecks.bestPractices;
+          if (categories.includes("best-practices"))
+            responsePayload.detailedChecks.bestPractices = result.allChecks.bestPractices;
         }
 
         return {
@@ -375,7 +409,9 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
       } catch (err: any) {
         return {
           isError: true,
-          content: [{ type: "text", text: `Lighthouse audit error: ${err.message || String(err)}` }],
+          content: [
+            { type: "text", text: `Lighthouse audit error: ${err.message || String(err)}` },
+          ],
         };
       }
     }
