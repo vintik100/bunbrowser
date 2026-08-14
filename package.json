@@ -17,6 +17,15 @@
     "bunbrowser-mcp": "./bin/bunbrowser.ts",
     "bunpw-mcp": "./bin/bunbrowser.ts"
   },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "bun run src/index.ts",
     "test": "bun test",
