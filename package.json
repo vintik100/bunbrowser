@@ -1,0 +1,46 @@
+{
+  "name": "@bunbrowser/mcp",
+  "version": "1.0.0",
+  "description": "Ultra-fast Model Context Protocol (MCP) server for browser automation powered by Bun.WebView",
+  "main": "src/index.ts",
+  "type": "module",
+  "homepage": "https://github.com/vintik100/bunbrowser#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vintik100/bunbrowser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vintik100/bunbrowser/issues"
+  },
+  "bin": {
+    "bunbrowser": "./bin/bunbrowser.ts",
+    "bunbrowser-mcp": "./bin/bunbrowser.ts",
+    "bunpw-mcp": "./bin/bunbrowser.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "bun test",
+    "check": "bun tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "bun",
+    "bunbrowser",
+    "webview",
+    "playwright",
+    "browser-automation",
+    "llm",
+    "ai"
+  ],
+  "author": "Vitaly",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^7.0.2"
+  }
+}

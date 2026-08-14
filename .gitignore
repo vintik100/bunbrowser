@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Bun & Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Profiles & Local data
+.bunpw-profile/
+.bunbrowser-profile/
+recordings/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webm
+!docs/**/*.png
+!docs/**/*.gif
+
+# Environment & Logs
+*.log
+.env
+.env.local
+.env.*.local
