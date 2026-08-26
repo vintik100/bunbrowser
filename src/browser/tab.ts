@@ -8,6 +8,8 @@ import type {
   KeyModifier,
   RecordingOptions,
   RecordingResult,
+  ScreenshotOptions,
+  ScreenshotResult,
   ScrollOptions,
   SnapshotResult,
   TabInfo,
@@ -163,12 +165,31 @@ export class BrowserTab {
     return result;
   }
 
-  public async screenshot(
-    options: { format?: "png" | "jpeg" | "webp"; quality?: number } = {}
-  ): Promise<{ base64: string; mimeType: string }> {
+  public async screenshot(options: ScreenshotOptions = {}): Promise<ScreenshotResult> {
     this.ensureActive();
     const format = options.format || "png";
     const quality = options.quality ?? 80;
+
+    const mimeMap: Record<string, string> = {
+      png: "image/png",
+      jpeg: "image/jpeg",
+      webp: "image/webp",
+    };
+    const mimeType = mimeMap[format] || "image/png";
+
+    if (options.outputPath) {
+      const blob = (await this.view.screenshot({
+        format,
+        quality,
+        encoding: "blob",
+      })) as Blob;
+      await Bun.write(options.outputPath, blob);
+      return {
+        mimeType,
+        outputPath: options.outputPath,
+        fileSizeBytes: blob.size,
+      };
+    }
 
     const base64 = (await this.view.screenshot({
       format,
@@ -176,15 +197,9 @@ export class BrowserTab {
       encoding: "base64",
     })) as string;
 
-    const mimeMap: Record<string, string> = {
-      png: "image/png",
-      jpeg: "image/jpeg",
-      webp: "image/webp",
-    };
-
     return {
       base64,
-      mimeType: mimeMap[format] || "image/png",
+      mimeType,
     };
   }
 
