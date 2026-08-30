@@ -42,28 +42,54 @@ export function registerInspectionTools(server: any, manager: BrowserManager) {
         .max(100)
         .optional()
         .describe("Image compression quality 0-100 for jpeg/webp (default: 80)"),
+      outputPath: z
+        .string()
+        .optional()
+        .describe(
+          "Optional absolute file path to save the image to disk directly (e.g. 'C:/shots/page.png'). When provided, the image is written to disk via Bun.write and a text confirmation with the path and file size is returned instead of the Base64 payload."
+        ),
     },
     async ({
       format = "png",
       quality = 80,
+      outputPath,
     }: {
       format?: "png" | "jpeg" | "webp";
       quality?: number;
+      outputPath?: string;
     }) => {
       try {
         const tab = await manager.getActiveTab();
-        const { base64, mimeType } = await tab.screenshot({ format, quality });
+        const result = await tab.screenshot({ format, quality, outputPath });
+
+        if (result.outputPath) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Screenshot saved to disk (${format.toUpperCase()}, ${result.mimeType}, ${result.fileSizeBytes} bytes):\n${result.outputPath}`,
+              },
+            ],
+          };
+        }
+
+        if (!result.base64) {
+          return {
+            isError: true,
+            content: [{ type: "text", text: "Screenshot error: no image data returned" }],
+          };
+        }
 
         return {
           content: [
             {
               type: "image",
-              data: base64,
-              mimeType,
+              data: result.base64,
+              mimeType: result.mimeType,
             },
             {
               type: "text",
-              text: `Screenshot captured successfully (${format.toUpperCase()}, ${mimeType})`,
+              text: `Screenshot captured successfully (${format.toUpperCase()}, ${result.mimeType})`,
             },
           ],
         };

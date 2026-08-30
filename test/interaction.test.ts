@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from "bun:test";
+import { tmpdir } from "node:os";
 import { BrowserTab } from "../src/browser/tab.js";
 
 describe("BrowserTab Interactions", () => {
@@ -64,7 +65,24 @@ describe("BrowserTab Interactions", () => {
 
     expect(mimeType).toBe("image/png");
     expect(typeof base64).toBe("string");
-    expect(base64.length).toBeGreaterThan(100);
+    expect(base64!.length).toBeGreaterThan(100);
+  });
+
+  it("should save screenshot directly to disk via Bun.write", async () => {
+    await tab.navigate("data:text/html,<h1 style='color:blue'>Disk Screenshot Test</h1>");
+    const outputPath = `${tmpdir()}/bunbrowser-screenshot-test.png`;
+    const result = await tab.screenshot({ format: "png", outputPath });
+
+    expect(result.mimeType).toBe("image/png");
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.base64).toBeUndefined();
+    expect(result.fileSizeBytes).toBeDefined();
+    expect(result.fileSizeBytes!).toBeGreaterThan(0);
+
+    const onDisk = await Bun.file(outputPath).exists();
+    expect(onDisk).toBe(true);
+    expect((await Bun.file(outputPath).bytes()).length).toBe(result.fileSizeBytes!);
+    await Bun.write(outputPath, new Uint8Array(0));
   });
 
   it("should get HTML and text content", async () => {

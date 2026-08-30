@@ -65,6 +65,19 @@ export interface SnapshotResult {
   rawTree?: SnapshotNode;
 }
 
+export interface ScreenshotOptions {
+  format?: "png" | "jpeg" | "webp";
+  quality?: number;
+  outputPath?: string;
+}
+
+export interface ScreenshotResult {
+  base64?: string;
+  mimeType: string;
+  outputPath?: string;
+  fileSizeBytes?: number;
+}
+
 export interface BrowserConfig {
   defaultWidth?: number;
   defaultHeight?: number;

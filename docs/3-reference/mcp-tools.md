@@ -55,12 +55,13 @@ Reloads the active browser page.
 ---
 
 ### `browser_take_screenshot`
-**VISUAL ONLY.** Captures a visual image of the current viewport encoded in Base64.
+**VISUAL ONLY.** Captures a visual image of the current viewport encoded in Base64, or writes it directly to disk when `outputPath` is provided.
 
 * **Parameters:**
   * `format` (`"png" | "jpeg" | "webp"`, optional): Image format (default: `"png"`).
   * `quality` (`number`, optional): Compression quality 0-100 for JPEG/WebP (default: `80`).
-* **Returns:** Base64 image payload and MIME type.
+  * `outputPath` (`string`, optional): Absolute path to save the image directly to disk. Uses `Bun.write()` with the WebView's zero-copy `Blob` output for maximum performance (no Base64 round-trip).
+* **Returns:** Base64 image payload and MIME type (default), or a text confirmation with the saved path and file size in bytes (when `outputPath` is set).
 
 ---
 

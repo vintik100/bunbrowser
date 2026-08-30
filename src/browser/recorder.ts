@@ -52,7 +52,7 @@ export class TabRecorder {
       });
       this.capturedFrames.push({
         timestamp: Date.now(),
-        base64: first.base64,
+        base64: first.base64 || "",
       });
     } catch {
       // Ignore initial frame error if page is still navigating
@@ -69,7 +69,7 @@ export class TabRecorder {
         if (this.isRecordingActive) {
           this.capturedFrames.push({
             timestamp: Date.now(),
-            base64: frame.base64,
+            base64: frame.base64 || "",
           });
         }
       } catch {
@@ -99,7 +99,7 @@ export class TabRecorder {
       });
       this.capturedFrames.push({
         timestamp: Date.now(),
-        base64: last.base64,
+        base64: last.base64 || "",
       });
     } catch {
       // Ignore
