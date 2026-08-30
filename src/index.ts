@@ -16,7 +16,10 @@ function parseArgs(): BrowserConfig {
     } else if (arg === "--height" && args[i + 1]) {
       config.defaultHeight = parseInt(args[++i], 10);
     } else if (arg === "--backend" && args[i + 1]) {
-      config.backend = args[++i] as any;
+      const backendArg = args[++i];
+      if (backendArg === "chrome" || backendArg === "webkit") {
+        config.backend = backendArg;
+      }
     } else if (arg === "--datastore" && args[i + 1]) {
       config.dataStore = { directory: args[++i] };
     } else if (arg === "--url" && args[i + 1]) {

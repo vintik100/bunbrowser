@@ -1,33 +1,33 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BrowserManager } from "../browser/manager.js";
+import { registerMcpTool } from "./tool_helper.js";
 
 const CategoryEnum = z.enum(["performance", "accessibility", "best-practices", "seo"]);
 
-export function registerMetricsTools(server: any, manager: BrowserManager) {
-  server.tool(
+export function registerMetricsTools(server: McpServer, manager: BrowserManager): void {
+  registerMcpTool(
+    server,
     "browser_get_metrics",
-    "Extract real-time web performance metrics, Core Web Vitals (TTFB, FCP, load duration), JavaScript heap memory consumption, and network resource transfer breakdown.",
     {
-      includeResources: z
-        .boolean()
-        .optional()
-        .describe(
-          "Whether to include the full list of loaded network resources with individual transfer sizes and durations (default: false)"
-        ),
-      includeCdp: z
-        .boolean()
-        .optional()
-        .describe(
-          "Whether to include low-level CDP metrics like memory JSHeapUsedSize and DOM node counts (default: true)"
-        ),
+      description:
+        "Extract real-time web performance metrics, Core Web Vitals (TTFB, FCP, load duration), JavaScript heap memory consumption, and network resource transfer breakdown.",
+      inputSchema: {
+        includeResources: z
+          .boolean()
+          .optional()
+          .describe(
+            "Whether to include the full list of loaded network resources with individual transfer sizes and durations (default: false)"
+          ),
+        includeCdp: z
+          .boolean()
+          .optional()
+          .describe(
+            "Whether to include low-level CDP metrics like memory JSHeapUsedSize and DOM node counts (default: true)"
+          ),
+      },
     },
-    async ({
-      includeResources = false,
-      includeCdp = true,
-    }: {
-      includeResources?: boolean;
-      includeCdp?: boolean;
-    }) => {
+    async ({ includeResources = false, includeCdp = true }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -110,7 +110,7 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
           }
         }
 
-        const outputData: any = {
+        const outputData: Record<string, unknown> = {
           url: inPageMetrics.url,
           title: inPageMetrics.title,
           timing: inPageMetrics.timing,
@@ -132,13 +132,14 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
             },
           ],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
           content: [
             {
               type: "text",
-              text: `Error retrieving performance metrics: ${err.message || String(err)}`,
+              text: `Error retrieving performance metrics: ${message}`,
             },
           ],
         };
@@ -146,27 +147,28 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_lighthouse_audit",
-    "FULL WEB QUALITY AUDIT. Computes Lighthouse scores (0-100) for Performance, Accessibility, Best Practices, and SEO. Returns actionable recommendations and diagnostics to optimize Core Web Vitals (FCP, LCP, TTFB, CLS) and user experience.",
     {
-      categories: z
-        .array(CategoryEnum)
-        .optional()
-        .describe(
-          "Categories to audit: ['performance', 'accessibility', 'best-practices', 'seo'] (default: all)"
-        ),
-      detailed: z
-        .boolean()
-        .optional()
-        .describe("Whether to include full check-by-check pass/fail breakdown (default: false)"),
+      description:
+        "FULL WEB QUALITY AUDIT. Computes Lighthouse scores (0-100) for Performance, Accessibility, Best Practices, and SEO. Returns actionable recommendations and diagnostics to optimize Core Web Vitals (FCP, LCP, TTFB, CLS) and user experience.",
+      inputSchema: {
+        categories: z
+          .array(CategoryEnum)
+          .optional()
+          .describe(
+            "Categories to audit: ['performance', 'accessibility', 'best-practices', 'seo'] (default: all)"
+          ),
+        detailed: z
+          .boolean()
+          .optional()
+          .describe("Whether to include full check-by-check pass/fail breakdown (default: false)"),
+      },
     },
     async ({
       categories = ["performance", "accessibility", "best-practices", "seo"],
       detailed = false,
-    }: {
-      categories?: Array<"performance" | "accessibility" | "best-practices" | "seo">;
-      detailed?: boolean;
     }) => {
       try {
         const tab = await manager.getActiveTab();
@@ -381,7 +383,7 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
           filteredScores.bestPractices = result.scores.bestPractices;
         if (categories.includes("seo")) filteredScores.seo = result.scores.seo;
 
-        const responsePayload: any = {
+        const responsePayload: Record<string, unknown> = {
           url: result.url,
           title: result.title,
           auditScores: filteredScores,
@@ -390,12 +392,13 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
         };
 
         if (detailed) {
-          responsePayload.detailedChecks = {};
+          const detailedChecks: Record<string, unknown> = {};
           if (categories.includes("accessibility"))
-            responsePayload.detailedChecks.accessibility = result.allChecks.accessibility;
-          if (categories.includes("seo")) responsePayload.detailedChecks.seo = result.allChecks.seo;
+            detailedChecks.accessibility = result.allChecks.accessibility;
+          if (categories.includes("seo")) detailedChecks.seo = result.allChecks.seo;
           if (categories.includes("best-practices"))
-            responsePayload.detailedChecks.bestPractices = result.allChecks.bestPractices;
+            detailedChecks.bestPractices = result.allChecks.bestPractices;
+          responsePayload.detailedChecks = detailedChecks;
         }
 
         return {
@@ -406,12 +409,11 @@ export function registerMetricsTools(server: any, manager: BrowserManager) {
             },
           ],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [
-            { type: "text", text: `Lighthouse audit error: ${err.message || String(err)}` },
-          ],
+          content: [{ type: "text", text: `Lighthouse audit error: ${message}` }],
         };
       }
     }

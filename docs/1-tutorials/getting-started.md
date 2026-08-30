@@ -50,8 +50,9 @@ You should see all test suites pass with zero failures:
 ✓ BrowserTab Interactions > should interact with elements
 ✓ MCP Server Integration > should list all registered browser tools
 ✓ Video & Animation Recording Module > should start and stop continuous video recording
+✓ Video Recording Parameters & Metrics Suite > should record multi-duration videos
 ...
- 28 pass
+ 51 pass
  0 fail
 ```
 
@@ -59,7 +60,7 @@ You should see all test suites pass with zero failures:
 
 ## Step 2: Understand the Agent Interaction Loop
 
-Unlike legacy browser automation that relies on pixel coordinates or fragile CSS selector chains, `bunpw-mcp` operates through a **semantic interaction loop**:
+Unlike legacy browser automation that relies on pixel coordinates or fragile CSS selector chains, `@bunbrowser/mcp` operates through a **semantic interaction loop**:
 
 ```text
 [ AI Agent ] ───► 1. browser_navigate(url)
@@ -70,7 +71,7 @@ Unlike legacy browser automation that relies on pixel coordinates or fragile CSS
 ```
 
 1. **Navigation**: The agent navigates to a URL using `browser_navigate`.
-2. **Observation**: `bunpw-mcp` parses the DOM into a hierarchical accessibility tree where interactive nodes (buttons, inputs, links) are assigned deterministic references (`[e1]`, `[e2]`).
+2. **Observation**: `@bunbrowser/mcp` parses the DOM into a hierarchical accessibility tree where interactive nodes (buttons, inputs, links) are assigned deterministic references (`[e1]`, `[e2]`).
 3. **Action**: The agent triggers interactions using the `ref` identifier with tools such as `browser_click`, `browser_type`, or `browser_fill_form`.
 
 ---
@@ -97,11 +98,13 @@ console.log("\n2. Capturing semantic accessibility tree:");
 const snapshot = await tab.snapshot();
 console.log(snapshot.treeText);
 
-// 3. Capture and save a visual screenshot
-console.log("\n3. Saving screenshot...");
-const screenshot = await tab.screenshot({ format: "png" });
-await Bun.write("screenshot-example.png", Buffer.from(screenshot.base64, "base64"));
-console.log("Screenshot saved to 'screenshot-example.png'!");
+// 3. Capture and save a visual screenshot directly to disk
+console.log("\n3. Saving screenshot directly to disk...");
+const screenshot = await tab.screenshot({
+  format: "png",
+  outputPath: "./screenshot-example.png",
+});
+console.log(`Screenshot saved to '${screenshot.outputPath}' (${screenshot.fileSizeBytes} bytes)!`);
 
 // 4. Clean up
 manager.closeAll();
@@ -125,8 +128,8 @@ generic
     "This domain is for use in illustrative examples in documents..."
   [e1] link "More information..."
 
-3. Saving screenshot...
-Screenshot saved to 'screenshot-example.png'!
+3. Saving screenshot directly to disk...
+Screenshot saved to './screenshot-example.png' (24150 bytes)!
 ```
 
 Notice that the link `"More information..."` was assigned identifier `[e1]`. An AI agent can click it directly using `browser_click({ ref: "e1" })`.
@@ -136,7 +139,7 @@ Notice that the link `"More information..."` was assigned identifier `[e1]`. An 
 ## Next Steps
 
 Congratulations! You have completed the introductory tutorial. You are now ready to:
-* Connect `bunpw-mcp` to your favorite AI client: See [Configuring MCP Clients](../2-how-to/configure-clients.md).
+* Connect `@bunbrowser/mcp` to your favorite AI client: See [Configuring MCP Clients](../2-how-to/configure-clients.md).
 * Master token-efficient prompting: See [Optimal Agent Prompting Guide](../2-how-to/prompting-guide.md).
 * Record video and debug animations: See [Recording Videos and Animations](../2-how-to/record-animations.md).
 * Explore the full tools catalog: See [MCP Tools Reference](../3-reference/mcp-tools.md).

@@ -1,12 +1,23 @@
-import { afterAll, describe, expect, it } from "bun:test";
-import { tmpdir } from "node:os";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { resolve } from "node:path";
 import { BrowserTab } from "../src/browser/tab.js";
 
 describe("BrowserTab Interactions", () => {
+  const tmpDir = resolve(import.meta.dir, ".tmp");
   const tab = new BrowserTab();
+
+  beforeAll(() => {
+    mkdirSync(tmpDir, { recursive: true });
+  });
 
   afterAll(() => {
     tab.close();
+    if (existsSync(tmpDir)) {
+      try {
+        rmSync(tmpDir, { recursive: true, force: true });
+      } catch {}
+    }
   });
 
   it("should interact with elements (click, type, evaluate)", async () => {
@@ -70,7 +81,7 @@ describe("BrowserTab Interactions", () => {
 
   it("should save screenshot directly to disk via Bun.write", async () => {
     await tab.navigate("data:text/html,<h1 style='color:blue'>Disk Screenshot Test</h1>");
-    const outputPath = `${tmpdir()}/bunbrowser-screenshot-test.png`;
+    const outputPath = resolve(tmpDir, "bunbrowser-screenshot-test.png");
     const result = await tab.screenshot({ format: "png", outputPath });
 
     expect(result.mimeType).toBe("image/png");
@@ -82,7 +93,6 @@ describe("BrowserTab Interactions", () => {
     const onDisk = await Bun.file(outputPath).exists();
     expect(onDisk).toBe(true);
     expect((await Bun.file(outputPath).bytes()).length).toBe(result.fileSizeBytes!);
-    await Bun.write(outputPath, new Uint8Array(0));
   });
 
   it("should get HTML and text content", async () => {

@@ -1,11 +1,15 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BrowserManager } from "../browser/manager.js";
+import { registerMcpTool } from "./tool_helper.js";
 
-export function registerTabTools(server: any, manager: BrowserManager) {
-  server.tool(
+export function registerTabTools(server: McpServer, manager: BrowserManager): void {
+  registerMcpTool(
+    server,
     "browser_tabs",
-    "List all open browser tabs with their IDs, URLs, titles, and active status",
-    {},
+    {
+      description: "List all open browser tabs with their IDs, URLs, titles, and active status",
+    },
     async () => {
       try {
         const tabs = manager.listTabs();
@@ -28,38 +32,32 @@ export function registerTabTools(server: any, manager: BrowserManager) {
             },
           ],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error listing tabs: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Error listing tabs: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_tab_new",
-    "Open a new browser tab/view, optionally navigating to an initial URL",
     {
-      url: z.string().optional().describe("Initial URL to open in the new tab"),
-      width: z.number().optional().describe("Viewport width (default: 1280)"),
-      height: z.number().optional().describe("Viewport height (default: 720)"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return a snapshot of the new tab (default: true)"),
+      description: "Open a new browser tab/view, optionally navigating to an initial URL",
+      inputSchema: {
+        url: z.string().optional().describe("Initial URL to open in the new tab"),
+        width: z.number().optional().describe("Viewport width (default: 1280)"),
+        height: z.number().optional().describe("Viewport height (default: 720)"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return a snapshot of the new tab (default: true)"),
+      },
     },
-    async ({
-      url,
-      width,
-      height,
-      snapshot = true,
-    }: {
-      url?: string;
-      width?: number;
-      height?: number;
-      snapshot?: boolean;
-    }) => {
+    async ({ url, width, height, snapshot = true }) => {
       try {
         const tab = await manager.createTab(url, { width, height });
         let responseText = `Opened new Tab: ${tab.id} (URL: ${tab.url || "about:blank"})`;
@@ -72,26 +70,30 @@ export function registerTabTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error creating tab: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Error creating tab: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_tab_switch",
-    "Switch the active browser context to a different tab by tabId",
     {
-      tabId: z.string().describe("The ID of the tab to switch to (e.g. 'tab_1')"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return a snapshot of the switched tab (default: true)"),
+      description: "Switch the active browser context to a different tab by tabId",
+      inputSchema: {
+        tabId: z.string().describe("The ID of the tab to switch to (e.g. 'tab_1')"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return a snapshot of the switched tab (default: true)"),
+      },
     },
-    async ({ tabId, snapshot = true }: { tabId: string; snapshot?: boolean }) => {
+    async ({ tabId, snapshot = true }) => {
       try {
         const tab = manager.switchTab(tabId);
         let responseText = `Switched active tab to: ${tab.id} (URL: ${tab.url || "about:blank"})`;
@@ -104,25 +106,29 @@ export function registerTabTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error switching tab: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Error switching tab: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_tab_close",
-    "Close a browser tab (closes the active tab if tabId is omitted)",
     {
-      tabId: z
-        .string()
-        .optional()
-        .describe("The ID of the tab to close (default: current active tab)"),
+      description: "Close a browser tab (closes the active tab if tabId is omitted)",
+      inputSchema: {
+        tabId: z
+          .string()
+          .optional()
+          .describe("The ID of the tab to close (default: current active tab)"),
+      },
     },
-    async ({ tabId }: { tabId?: string }) => {
+    async ({ tabId }) => {
       try {
         const closed = await manager.closeTab(tabId);
         if (!closed) {
@@ -134,26 +140,37 @@ export function registerTabTools(server: any, manager: BrowserManager) {
         const remaining = manager.listTabs().length;
         return {
           content: [
-            { type: "text", text: `Tab closed successfully. (${remaining} remaining tabs)` },
+            {
+              type: "text",
+              text: `Tab closed successfully. (${remaining} remaining tabs)`,
+            },
           ],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error closing tab: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Error closing tab: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_resize",
-    "Resize the viewport dimensions of the active browser tab",
     {
-      width: z.number().min(100).max(16384).describe("Viewport width in CSS pixels (100-16384)"),
-      height: z.number().min(100).max(16384).describe("Viewport height in CSS pixels (100-16384)"),
+      description: "Resize the viewport dimensions of the active browser tab",
+      inputSchema: {
+        width: z.number().min(100).max(16384).describe("Viewport width in CSS pixels (100-16384)"),
+        height: z
+          .number()
+          .min(100)
+          .max(16384)
+          .describe("Viewport height in CSS pixels (100-16384)"),
+      },
     },
-    async ({ width, height }: { width: number; height: number }) => {
+    async ({ width, height }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.resize(width, height);
@@ -161,10 +178,11 @@ export function registerTabTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: `Resized viewport to ${width}x${height}px.` }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Resize error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Resize error: ${message}` }],
         };
       }
     }

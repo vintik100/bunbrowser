@@ -28,15 +28,20 @@ describe("MCP Server Integration", () => {
     const response = await client.listTools();
     const toolNames = response.tools.map((t) => t.name);
 
+    // 1. Navigation (4)
     expect(toolNames).toContain("browser_navigate");
     expect(toolNames).toContain("browser_navigate_back");
     expect(toolNames).toContain("browser_navigate_forward");
     expect(toolNames).toContain("browser_reload");
+
+    // 2. Inspection & State (5)
     expect(toolNames).toContain("browser_snapshot");
     expect(toolNames).toContain("browser_take_screenshot");
     expect(toolNames).toContain("browser_evaluate");
     expect(toolNames).toContain("browser_get_content");
     expect(toolNames).toContain("browser_console_logs");
+
+    // 3. Interaction (8)
     expect(toolNames).toContain("browser_click");
     expect(toolNames).toContain("browser_type");
     expect(toolNames).toContain("browser_fill_form");
@@ -44,11 +49,25 @@ describe("MCP Server Integration", () => {
     expect(toolNames).toContain("browser_hover");
     expect(toolNames).toContain("browser_scroll");
     expect(toolNames).toContain("browser_select_option");
+    expect(toolNames).toContain("browser_drag");
+
+    // 4. Tabs Management (5)
     expect(toolNames).toContain("browser_tabs");
     expect(toolNames).toContain("browser_tab_new");
     expect(toolNames).toContain("browser_tab_switch");
     expect(toolNames).toContain("browser_tab_close");
     expect(toolNames).toContain("browser_resize");
+
+    // 5. Storage & CDP (3)
+    expect(toolNames).toContain("browser_cdp");
+    expect(toolNames).toContain("browser_cookies");
+    expect(toolNames).toContain("browser_localstorage");
+
+    // 6. Metrics & Lighthouse (2)
+    expect(toolNames).toContain("browser_get_metrics");
+    expect(toolNames).toContain("browser_lighthouse_audit");
+
+    // 7. Video Recording (3)
     expect(toolNames).toContain("browser_start_recording");
     expect(toolNames).toContain("browser_stop_recording");
     expect(toolNames).toContain("browser_record_animation");

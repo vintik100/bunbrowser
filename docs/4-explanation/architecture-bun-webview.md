@@ -67,7 +67,35 @@ Large Language Models (LLMs) reason over hierarchical semantic text much faster,
 
 ---
 
-## 4. Lifecycle and Resource Management
+## 4. In-Page Video & Animation Recording Pipeline
+
+Capturing high-framerate browser interactions without degrading runtime responsiveness presents significant IPC overhead challenges in traditional automation architectures. `@bunbrowser/mcp` implements a dedicated in-page recording engine (`TabRecorder`):
+
+```text
+[ BrowserTab Actions ] ──► Frame Capture Loop (CDP / Page Screencast)
+                                   │
+                                   ▼
+                         [ In-Page Context ]
+               +───────────────────────────────────────+
+               |  <canvas> Render Pipeline             |
+               |  • Dynamic Timestamp Delta Timing      |
+               |  • Animated Click Ripple Compositing  |
+               |  • In-Page MediaRecorder / GifEncoder  |
+               +───────────────────────────────────────+
+                                   │
+                                   ▼ (Final Binary Buffer)
+                  [ Bun.write() Zero-Copy Disk I/O ]
+```
+
+### Key Architectural Techniques:
+1. **In-Page Canvas Encoding**: Rather than transferring thousands of uncompressed RGBA pixel buffers over IPC pipes to the Node/Bun host process, frames are decoded and rendered to an offscreen canvas inside the page context. Encoding (via native `MediaRecorder` or in-page `GifEncoder`) runs directly inside the browser's hardware-accelerated engine.
+2. **Deterministic Timestamp Delta Calibration**: Each captured frame records high-precision timestamps. Delay calculations dynamically adjust individual frame delays (e.g. GIF Graphics Control Extension delay units) so that variable frame-rate captures maintain exact 1:1 real-time playback synchronization.
+3. **Zero-Copy Disk Writes**: Both screenshots (`browser_take_screenshot`) and video recordings leverage `Bun.write()` with `Uint8Array` binary buffers, bypassing Base64 string serialization when saving to disk.
+
+---
+
+## 5. Lifecycle and Resource Management (RAII)
 
 * **Single Host Process, Multiple Views**: Tabs (`BrowserTab`) are isolated views sharing a single underlying browser engine to minimize memory consumption.
-* **Guaranteed Cleanup**: `BrowserManager` captures process exit signals (`SIGINT`, `SIGTERM`, `exit`) to ensure all child helper processes are terminated with zero orphaned background tasks.
+* **RAII Lifecycle & Cleanup**: When a tab is closed or the server terminates, `BrowserManager` disposes active recording intervals, clears canvas memory, and closes child helper processes cleanly on `SIGINT`, `SIGTERM`, and process exit.
+

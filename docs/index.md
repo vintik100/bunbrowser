@@ -38,7 +38,7 @@ Welcome to the **`@bunbrowser/mcp`** (`bunbrowser`) documentation portal, organi
 
 ### 📖 3. [Technical Reference](./3-reference/)
 *Focus: Information-oriented technical descriptions of machinery, schemas, and CLI options.*
-* [MCP Tools Catalog & Schemas](./3-reference/mcp-tools.md): Complete specifications for all 24 MCP tools, parameters, and return types.
+* [MCP Tools Catalog & Schemas](./3-reference/mcp-tools.md): Complete specifications for all 30 MCP tools, parameters, and return types.
 * [Command-Line Options (CLI) & Environment](./3-reference/cli-options.md): Startup flags, environment variables, and exit codes.
 
 ---

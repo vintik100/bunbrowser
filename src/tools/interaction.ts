@@ -1,47 +1,56 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BrowserManager } from "../browser/manager.js";
+import type { KeyModifier } from "../browser/types.js";
+import { registerMcpTool } from "./tool_helper.js";
 
 const ModifierEnum = z.enum(["Shift", "Control", "Alt", "Meta"]);
 
-export function registerInteractionTools(server: any, manager: BrowserManager) {
-  server.tool(
+export function registerInteractionTools(server: McpServer, manager: BrowserManager): void {
+  registerMcpTool(
+    server,
     "browser_click",
-    "Click on an element. PREFER using 'ref' (e.g. 'e1' from browser_snapshot) for reliable deterministic targeting. Fall back to CSS selector or coordinates (x, y) if ref is unavailable.",
     {
-      ref: z
-        .string()
-        .optional()
-        .describe("PREFERRED: Element reference ID from browser_snapshot (e.g. 'e1' or 'ref=e1')"),
-      selector: z
-        .string()
-        .optional()
-        .describe("CSS selector for the target element (e.g. '#submit-btn' or 'button.primary')"),
-      x: z.number().optional().describe("Viewport X coordinate in pixels"),
-      y: z.number().optional().describe("Viewport Y coordinate in pixels"),
-      button: z
-        .enum(["left", "right", "middle"])
-        .optional()
-        .describe("Mouse button to click (default: 'left')"),
-      clickCount: z
-        .number()
-        .min(1)
-        .max(3)
-        .optional()
-        .describe("Number of clicks: 1 for single click, 2 for double click (default: 1)"),
-      modifiers: z
-        .array(ModifierEnum)
-        .optional()
-        .describe("Keyboard modifier keys to hold during the click (e.g. ['Shift'])"),
-      timeout: z
-        .number()
-        .optional()
-        .describe("Timeout waiting for element to be actionable in ms (default: 30000)"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe(
-          "Whether to return an updated accessibility snapshot after the click (default: true)"
-        ),
+      description:
+        "Click on an element. PREFER using 'ref' (e.g. 'e1' from browser_snapshot) for reliable deterministic targeting. Fall back to CSS selector or coordinates (x, y) if ref is unavailable.",
+      inputSchema: {
+        ref: z
+          .string()
+          .optional()
+          .describe(
+            "PREFERRED: Element reference ID from browser_snapshot (e.g. 'e1' or 'ref=e1')"
+          ),
+        selector: z
+          .string()
+          .optional()
+          .describe("CSS selector for the target element (e.g. '#submit-btn' or 'button.primary')"),
+        x: z.number().optional().describe("Viewport X coordinate in pixels"),
+        y: z.number().optional().describe("Viewport Y coordinate in pixels"),
+        button: z
+          .enum(["left", "right", "middle"])
+          .optional()
+          .describe("Mouse button to click (default: 'left')"),
+        clickCount: z
+          .number()
+          .min(1)
+          .max(3)
+          .optional()
+          .describe("Number of clicks: 1 for single click, 2 for double click (default: 1)"),
+        modifiers: z
+          .array(ModifierEnum)
+          .optional()
+          .describe("Keyboard modifier keys to hold during the click (e.g. ['Shift'])"),
+        timeout: z
+          .number()
+          .optional()
+          .describe("Timeout waiting for element to be actionable in ms (default: 30000)"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe(
+            "Whether to return an updated accessibility snapshot after the click (default: true)"
+          ),
+      },
     },
     async ({
       ref,
@@ -53,20 +62,13 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
       modifiers,
       timeout,
       snapshot = true,
-    }: {
-      ref?: string;
-      selector?: string;
-      x?: number;
-      y?: number;
-      button?: "left" | "right" | "middle";
-      clickCount?: number;
-      modifiers?: any[];
-      timeout?: number;
-      snapshot?: boolean;
     }) => {
       try {
         const tab = await manager.getActiveTab();
-        await tab.click({ ref, selector, x, y }, { button, clickCount, modifiers, timeout });
+        await tab.click(
+          { ref, selector, x, y },
+          { button, clickCount, modifiers: modifiers as KeyModifier[], timeout }
+        );
 
         const targetDesc = ref
           ? `ref '${ref}'`
@@ -83,55 +85,46 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Click error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Click error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_type",
-    "Type text into an editable input or textarea element. Prefer using 'ref' (e.g. 'e2'). For filling multiple form fields, use browser_fill_form instead to save steps.",
     {
-      ref: z
-        .string()
-        .optional()
-        .describe("PREFERRED: Element reference ID from browser_snapshot (e.g. 'e2')"),
-      selector: z.string().optional().describe("CSS selector for the input element"),
-      text: z.string().describe("The text string to type into the focused element"),
-      clear: z
-        .boolean()
-        .optional()
-        .describe("Whether to clear existing text before typing (default: false)"),
-      pressEnter: z
-        .boolean()
-        .optional()
-        .describe("Whether to press Enter key immediately after typing (default: false)"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe(
-          "Whether to return an updated accessibility snapshot after typing (default: true)"
-        ),
+      description:
+        "Type text into an editable input or textarea element. Prefer using 'ref' (e.g. 'e2'). For filling multiple form fields, use browser_fill_form instead to save steps.",
+      inputSchema: {
+        ref: z
+          .string()
+          .optional()
+          .describe("PREFERRED: Element reference ID from browser_snapshot (e.g. 'e2')"),
+        selector: z.string().optional().describe("CSS selector for the input element"),
+        text: z.string().describe("The text string to type into the focused element"),
+        clear: z
+          .boolean()
+          .optional()
+          .describe("Whether to clear existing text before typing (default: false)"),
+        pressEnter: z
+          .boolean()
+          .optional()
+          .describe("Whether to press Enter key immediately after typing (default: false)"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe(
+            "Whether to return an updated accessibility snapshot after typing (default: true)"
+          ),
+      },
     },
-    async ({
-      ref,
-      selector,
-      text,
-      clear = false,
-      pressEnter = false,
-      snapshot = true,
-    }: {
-      ref?: string;
-      selector?: string;
-      text: string;
-      clear?: boolean;
-      pressEnter?: boolean;
-      snapshot?: boolean;
-    }) => {
+    async ({ ref, selector, text, clear = false, pressEnter = false, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.type({ ref, selector }, text, { clear });
@@ -151,56 +144,51 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Type error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Type error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_fill_form",
-    "BATCH FORM FILLER. PREFER over multiple individual browser_type calls. Fills multiple inputs and optionally clicks a submit button in a single turn.",
     {
-      fields: z
-        .array(
-          z.object({
-            ref: z
-              .string()
-              .optional()
-              .describe("PREFERRED: Element reference ID from browser_snapshot (e.g. 'e1')"),
-            selector: z.string().optional().describe("CSS selector for input field"),
-            value: z.string().describe("Value to fill into the input"),
-            clear: z.boolean().optional().describe("Clear input before typing (default: true)"),
-          })
-        )
-        .describe("Array of form fields to fill sequentially"),
-      submitRef: z
-        .string()
-        .optional()
-        .describe("Optional reference ID of submit button to click after filling (e.g. 'e5')"),
-      submitSelector: z
-        .string()
-        .optional()
-        .describe("Optional selector of submit button to click after filling"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return an updated snapshot after filling (default: true)"),
+      description:
+        "BATCH FORM FILLER. PREFER over multiple individual browser_type calls. Fills multiple inputs and optionally clicks a submit button in a single turn.",
+      inputSchema: {
+        fields: z
+          .array(
+            z.object({
+              ref: z
+                .string()
+                .optional()
+                .describe("PREFERRED: Element reference ID from browser_snapshot (e.g. 'e1')"),
+              selector: z.string().optional().describe("CSS selector for input field"),
+              value: z.string().describe("Value to fill into the input"),
+              clear: z.boolean().optional().describe("Clear input before typing (default: true)"),
+            })
+          )
+          .describe("Array of form fields to fill sequentially"),
+        submitRef: z
+          .string()
+          .optional()
+          .describe("Optional reference ID of submit button to click after filling (e.g. 'e5')"),
+        submitSelector: z
+          .string()
+          .optional()
+          .describe("Optional selector of submit button to click after filling"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return an updated snapshot after filling (default: true)"),
+      },
     },
-    async ({
-      fields,
-      submitRef,
-      submitSelector,
-      snapshot = true,
-    }: {
-      fields: Array<{ ref?: string; selector?: string; value: string; clear?: boolean }>;
-      submitRef?: string;
-      submitSelector?: string;
-      snapshot?: boolean;
-    }) => {
+    async ({ fields, submitRef, submitSelector, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         const tabFields = fields.map((f) => ({
@@ -226,45 +214,42 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Fill form error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Fill form error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_press_key",
-    "Press a keyboard key or key combination (e.g. 'Enter', 'Escape', 'Tab', 'ArrowDown', 'Backspace', 'KeyA')",
     {
-      key: z
-        .string()
-        .describe(
-          "Key name to press (e.g. 'Enter', 'Escape', 'Tab', 'Backspace', 'ArrowDown', 'a')"
-        ),
-      modifiers: z
-        .array(ModifierEnum)
-        .optional()
-        .describe("Modifier keys (e.g. ['Control'] or ['Meta'])"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return an updated snapshot after key press (default: false)"),
+      description:
+        "Press a keyboard key or key combination (e.g. 'Enter', 'Escape', 'Tab', 'ArrowDown', 'Backspace', 'KeyA')",
+      inputSchema: {
+        key: z
+          .string()
+          .describe(
+            "Key name to press (e.g. 'Enter', 'Escape', 'Tab', 'Backspace', 'ArrowDown', 'a')"
+          ),
+        modifiers: z
+          .array(ModifierEnum)
+          .optional()
+          .describe("Modifier keys (e.g. ['Control'] or ['Meta'])"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return an updated snapshot after key press (default: false)"),
+      },
     },
-    async ({
-      key,
-      modifiers,
-      snapshot = false,
-    }: {
-      key: string;
-      modifiers?: any[];
-      snapshot?: boolean;
-    }) => {
+    async ({ key, modifiers, snapshot = false }) => {
       try {
         const tab = await manager.getActiveTab();
-        await tab.pressKey(key, modifiers);
+        await tab.pressKey(key, modifiers as KeyModifier[]);
 
         const chordDesc = modifiers && modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
         let responseText = `Pressed key '${chordDesc}'.`;
@@ -277,41 +262,34 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Press key error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Press key error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_hover",
-    "Hover the mouse pointer over an element to trigger hover states or dropdown menus",
     {
-      ref: z.string().optional().describe("Element reference ID (e.g. 'e1')"),
-      selector: z.string().optional().describe("CSS selector for target element"),
-      x: z.number().optional().describe("Viewport X coordinate"),
-      y: z.number().optional().describe("Viewport Y coordinate"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return an updated snapshot (default: true)"),
+      description:
+        "Hover the mouse pointer over an element to trigger hover states or dropdown menus",
+      inputSchema: {
+        ref: z.string().optional().describe("Element reference ID (e.g. 'e1')"),
+        selector: z.string().optional().describe("CSS selector for target element"),
+        x: z.number().optional().describe("Viewport X coordinate"),
+        y: z.number().optional().describe("Viewport Y coordinate"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return an updated snapshot (default: true)"),
+      },
     },
-    async ({
-      ref,
-      selector,
-      x,
-      y,
-      snapshot = true,
-    }: {
-      ref?: string;
-      selector?: string;
-      x?: number;
-      y?: number;
-      snapshot?: boolean;
-    }) => {
+    async ({ ref, selector, x, y, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.hover({ ref, selector, x, y });
@@ -331,44 +309,37 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Hover error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Hover error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_scroll",
-    "Scroll the viewport or scroll an element into view",
     {
-      direction: z.enum(["up", "down", "top", "bottom"]).optional().describe("Direction to scroll"),
-      deltaX: z.number().optional().describe("Horizontal scroll delta in pixels"),
-      deltaY: z.number().optional().describe("Vertical scroll delta in pixels"),
-      ref: z.string().optional().describe("Element ref to scroll into view"),
-      selector: z.string().optional().describe("CSS selector to scroll into view"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return updated snapshot (default: true)"),
+      description: "Scroll the viewport or scroll an element into view",
+      inputSchema: {
+        direction: z
+          .enum(["up", "down", "top", "bottom"])
+          .optional()
+          .describe("Direction to scroll"),
+        deltaX: z.number().optional().describe("Horizontal scroll delta in pixels"),
+        deltaY: z.number().optional().describe("Vertical scroll delta in pixels"),
+        ref: z.string().optional().describe("Element ref to scroll into view"),
+        selector: z.string().optional().describe("CSS selector to scroll into view"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return updated snapshot (default: true)"),
+      },
     },
-    async ({
-      direction,
-      deltaX,
-      deltaY,
-      ref,
-      selector,
-      snapshot = true,
-    }: {
-      direction?: "up" | "down" | "top" | "bottom";
-      deltaX?: number;
-      deltaY?: number;
-      ref?: string;
-      selector?: string;
-      snapshot?: boolean;
-    }) => {
+    async ({ direction, deltaX, deltaY, ref, selector, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.scroll({ direction, deltaX, deltaY, ref, selector });
@@ -389,40 +360,34 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Scroll error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Scroll error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_select_option",
-    "Select one or more options in a <select> dropdown element",
     {
-      ref: z.string().optional().describe("Element reference ID for <select> (e.g. 'e3')"),
-      selector: z.string().optional().describe("CSS selector for <select> element"),
-      values: z
-        .union([z.string(), z.array(z.string())])
-        .describe("Option value(s) or visible text(s) to select"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return updated snapshot (default: true)"),
+      description: "Select one or more options in a <select> dropdown element",
+      inputSchema: {
+        ref: z.string().optional().describe("Element reference ID for <select> (e.g. 'e3')"),
+        selector: z.string().optional().describe("CSS selector for <select> element"),
+        values: z
+          .union([z.string(), z.array(z.string())])
+          .describe("Option value(s) or visible text(s) to select"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return updated snapshot (default: true)"),
+      },
     },
-    async ({
-      ref,
-      selector,
-      values,
-      snapshot = true,
-    }: {
-      ref?: string;
-      selector?: string;
-      values: string | string[];
-      snapshot?: boolean;
-    }) => {
+    async ({ ref, selector, values, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.selectOption({ ref, selector }, values);
@@ -439,41 +404,33 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Select option error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Select option error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_drag",
-    "Drag an element and drop it onto another element",
     {
-      sourceRef: z.string().optional().describe("Source element ref"),
-      sourceSelector: z.string().optional().describe("Source element CSS selector"),
-      targetRef: z.string().optional().describe("Target element ref"),
-      targetSelector: z.string().optional().describe("Target element CSS selector"),
-      snapshot: z
-        .boolean()
-        .optional()
-        .describe("Whether to return updated snapshot (default: true)"),
+      description: "Drag an element and drop it onto another element",
+      inputSchema: {
+        sourceRef: z.string().optional().describe("Source element ref"),
+        sourceSelector: z.string().optional().describe("Source element CSS selector"),
+        targetRef: z.string().optional().describe("Target element ref"),
+        targetSelector: z.string().optional().describe("Target element CSS selector"),
+        snapshot: z
+          .boolean()
+          .optional()
+          .describe("Whether to return updated snapshot (default: true)"),
+      },
     },
-    async ({
-      sourceRef,
-      sourceSelector,
-      targetRef,
-      targetSelector,
-      snapshot = true,
-    }: {
-      sourceRef?: string;
-      sourceSelector?: string;
-      targetRef?: string;
-      targetSelector?: string;
-      snapshot?: boolean;
-    }) => {
+    async ({ sourceRef, sourceSelector, targetRef, targetSelector, snapshot = true }) => {
       try {
         const tab = await manager.getActiveTab();
         await tab.drag(
@@ -491,10 +448,11 @@ export function registerInteractionTools(server: any, manager: BrowserManager) {
         return {
           content: [{ type: "text", text: responseText }],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Drag error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Drag error: ${message}` }],
         };
       }
     }

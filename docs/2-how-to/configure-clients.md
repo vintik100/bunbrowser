@@ -35,7 +35,7 @@ Add the `bunbrowser` entry under `mcpServers`:
 
 ### Step 3: Restart Claude Desktop
 
-Restart the Claude Desktop app. You will see the tool hammer icon (🛠️) populated with all 24 browser tools.
+Restart the Claude Desktop app. You will see the tool hammer icon (🛠️) populated with all 30 browser tools.
 
 ---
 

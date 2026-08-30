@@ -1,22 +1,28 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BrowserManager } from "../browser/manager.js";
+import { registerMcpTool } from "./tool_helper.js";
 
-export function registerStorageCdpTools(server: any, manager: BrowserManager) {
-  server.tool(
+export function registerStorageCdpTools(server: McpServer, manager: BrowserManager): void {
+  registerMcpTool(
+    server,
     "browser_cdp",
-    "Execute a raw Chrome DevTools Protocol (CDP) command on the active tab (Chrome/Chromium backend)",
     {
-      method: z
-        .string()
-        .describe(
-          "CDP method name (e.g. 'Network.getCookies', 'Emulation.setUserAgentOverride', 'DOM.getDocument')"
-        ),
-      params: z.record(z.any()).optional().describe("JSON parameters object for the CDP command"),
+      description:
+        "Execute a raw Chrome DevTools Protocol (CDP) command on the active tab (Chrome/Chromium backend)",
+      inputSchema: {
+        method: z
+          .string()
+          .describe(
+            "CDP method name (e.g. 'Network.getCookies', 'Emulation.setUserAgentOverride', 'DOM.getDocument')"
+          ),
+        params: z.record(z.any()).optional().describe("JSON parameters object for the CDP command"),
+      },
     },
-    async ({ method, params }: { method: string; params?: Record<string, any> }) => {
+    async ({ method, params }) => {
       try {
         const tab = await manager.getActiveTab();
-        const result = await tab.cdp(method, params);
+        const result = await tab.cdp(method, params as Record<string, any>);
 
         return {
           content: [
@@ -26,38 +32,30 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
             },
           ],
         };
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `CDP error (${method}): ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `CDP error (${method}): ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_cookies",
-    "Get, set, or clear cookies for the active browser session",
     {
-      action: z.enum(["get", "set", "clear"]).describe("Cookie action to perform"),
-      name: z.string().optional().describe("Cookie name (required for set)"),
-      value: z.string().optional().describe("Cookie value (required for set)"),
-      domain: z.string().optional().describe("Cookie domain (optional for set)"),
-      path: z.string().optional().describe("Cookie path (default: '/')"),
+      description: "Get, set, or clear cookies for the active browser session",
+      inputSchema: {
+        action: z.enum(["get", "set", "clear"]).describe("Cookie action to perform"),
+        name: z.string().optional().describe("Cookie name (required for set)"),
+        value: z.string().optional().describe("Cookie value (required for set)"),
+        domain: z.string().optional().describe("Cookie domain (optional for set)"),
+        path: z.string().optional().describe("Cookie path (default: '/')"),
+      },
     },
-    async ({
-      action,
-      name,
-      value,
-      domain,
-      path,
-    }: {
-      action: "get" | "set" | "clear";
-      name?: string;
-      value?: string;
-      domain?: string;
-      path?: string;
-    }) => {
+    async ({ action, name, value, domain, path }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -86,32 +84,31 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
         }
 
         throw new Error(`Unknown action: ${action}`);
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `Cookie error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `Cookie error: ${message}` }],
         };
       }
     }
   );
 
-  server.tool(
+  registerMcpTool(
+    server,
     "browser_localstorage",
-    "Inspect, set, or clear localStorage keys in the active page origin",
     {
-      action: z.enum(["get", "set", "clear"]).describe("Action to perform on localStorage"),
-      key: z.string().optional().describe("Storage key name (required for set, optional for get)"),
-      value: z.string().optional().describe("Storage value to set (required for set)"),
+      description: "Inspect, set, or clear localStorage keys in the active page origin",
+      inputSchema: {
+        action: z.enum(["get", "set", "clear"]).describe("Action to perform on localStorage"),
+        key: z
+          .string()
+          .optional()
+          .describe("Storage key name (required for set, optional for get)"),
+        value: z.string().optional().describe("Storage value to set (required for set)"),
+      },
     },
-    async ({
-      action,
-      key,
-      value,
-    }: {
-      action: "get" | "set" | "clear";
-      key?: string;
-      value?: string;
-    }) => {
+    async ({ action, key, value }) => {
       try {
         const tab = await manager.getActiveTab();
 
@@ -150,10 +147,11 @@ export function registerStorageCdpTools(server: any, manager: BrowserManager) {
         }
 
         throw new Error(`Unknown action: ${action}`);
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         return {
           isError: true,
-          content: [{ type: "text", text: `localStorage error: ${err.message || String(err)}` }],
+          content: [{ type: "text", text: `localStorage error: ${message}` }],
         };
       }
     }

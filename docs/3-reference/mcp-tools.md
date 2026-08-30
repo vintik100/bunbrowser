@@ -1,6 +1,6 @@
 # Technical Reference: MCP Tools Catalog (`mcp-tools`)
 
-This document is the complete reference specification for all 24 tools exposed by the **`@bunbrowser/mcp`** (`bunbrowser`, GitHub: [github.com/vintik100/bunbrowser](https://github.com/vintik100/bunbrowser)) server.
+This document is the complete reference specification for all 30 tools exposed by the **`@bunbrowser/mcp`** (`bunbrowser`, GitHub: [github.com/vintik100/bunbrowser](https://github.com/vintik100/bunbrowser)) server.
 
 ---
 
@@ -60,7 +60,7 @@ Reloads the active browser page.
 * **Parameters:**
   * `format` (`"png" | "jpeg" | "webp"`, optional): Image format (default: `"png"`).
   * `quality` (`number`, optional): Compression quality 0-100 for JPEG/WebP (default: `80`).
-  * `outputPath` (`string`, optional): Absolute path to save the image directly to disk. Uses `Bun.write()` with the WebView's zero-copy `Blob` output for maximum performance (no Base64 round-trip).
+  * `outputPath` (`string`, optional): File path destination to save the image directly to disk (e.g. `"./screenshots/page.png"`). Uses `Bun.write()` with zero-copy binary buffers for maximum performance without Base64 serialization overhead.
 * **Returns:** Base64 image payload and MIME type (default), or a text confirmation with the saved path and file size in bytes (when `outputPath` is set).
 
 ---
@@ -283,35 +283,42 @@ Runs a full Lighthouse-style quality audit computing scores (0-100) for Performa
 ## 7. Video Recording & Animation Module
 
 ### `browser_start_recording`
-Starts continuous background video recording on the active tab.
+Starts continuous background video recording of user interactions and animations on the active tab into WebM or animated GIF.
 
 * **Parameters:**
   * `fps` (`number`, optional): Frame rate between 1 and 60 FPS (default: `20`).
-  * `format` (`"webm" | "gif"`, optional): Video format (default: `"webm"`).
-  * `outputPath` (`string`, optional): File path destination (e.g. `"./recordings/test.webm"`).
-  * `quality` (`number`, optional): Image quality 1-100 (default: `80`).
+  * `format` (`"webm" | "gif"`, optional): Output video format (`"webm"` or `"gif"`, default: `"webm"`).
+  * `outputPath` (`string`, optional): File path destination to save the recording (e.g. `"./recordings/flow.webm"`).
+  * `quality` (`number`, optional): Image compression quality 1-100 (default: `80`).
+  * `scale` (`number`, optional): Downscaling factor for video frame dimensions 0.1-2.0 (e.g. `0.5` for 50% width/height, default: `1.0`).
+  * `maxFrames` (`number`, optional): Maximum frame count safety cap to prevent OOM (default: `1500`).
+  * `showCursor` (`boolean`, optional): Whether to render animated click ripples on interactions during recording (default: `true`).
+* **Returns:** Confirmation message with active tab ID, format, FPS, scaling, and output destination.
 
 ---
 
 ### `browser_stop_recording`
-Stops active video recording, compiles WebM or animated GIF, and exports to disk or returns Base64.
+Stops active video recording, exports the resulting WebM or animated GIF file to disk, and returns duration, frame counts, and dimensions.
 
 * **Parameters:**
-  * `savePath` (`string`, optional): Override file destination.
-  * `returnBase64` (`boolean`, optional): Return Base64 in MCP response (default: `false`).
-* **Returns:** Recording metrics (duration, total frames, file size, path).
+  * `savePath` (`string`, optional): Override file path destination to save the recording.
+  * `returnBase64` (`boolean`, optional): Whether to return base64 payload in the MCP response (default: `false`).
+* **Returns:** Detailed recording summary (duration, total frames, average FPS, format, dimensions `(WxH px)`, file size in KB, and saved path) plus inline image data if `returnBase64` is enabled for GIF.
 
 ---
 
 ### `browser_record_animation`
-Records a UI animation or user interaction for a specific duration (`durationMs`) with optional JavaScript or click triggers.
+**ONE-SHOT ANIMATION & MOTION RECORDER.** Records UI transitions, CSS keyframe animations, micro-interactions, or visual jank for an exact duration (`durationMs`) into WebM or animated GIF with optional JavaScript or click triggers.
 
 * **Parameters:**
   * `durationMs` (`number`, **required**): Recording duration in milliseconds (100 to 60000).
-  * `fps` (`number`, optional): Frame rate (default: `20`).
+  * `fps` (`number`, optional): Frames per second between 1 and 60 (default: `20`).
   * `format` (`"webm" | "gif"`, optional): Output format (`"webm"` or `"gif"`, default: `"webm"`).
-  * `outputPath` (`string`, optional): File path destination.
-  * `triggerScript` (`string`, optional): JavaScript expression to evaluate at start.
-  * `triggerSelector` (`string`, optional): CSS selector to click at start.
-  * `returnBase64` (`boolean`, optional): Return Base64 in MCP response (default: `false`).
-* **Returns:** Animation metadata, frame count, file size, and Base64 output.
+  * `outputPath` (`string`, optional): File path destination to save the recording (e.g. `"./recordings/animation.gif"`).
+  * `scale` (`number`, optional): Downscaling factor for video frame dimensions 0.1-2.0 (default: `1.0`).
+  * `quality` (`number`, optional): Image compression quality 1-100 (default: `80`).
+  * `showCursor` (`boolean`, optional): Whether to render animated click ripples on interactions during recording (default: `true`).
+  * `triggerScript` (`string`, optional): JavaScript code to execute in the page context right when recording begins.
+  * `triggerSelector` (`string`, optional): CSS selector of an element to click right when recording begins.
+  * `returnBase64` (`boolean`, optional): Whether to include base64 payload in the response (default: `false`).
+* **Returns:** Structured summary (duration, frames captured, average FPS, format, dimensions, file size, output path) and inline Base64 data if requested.

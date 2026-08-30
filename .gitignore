@@ -23,6 +23,8 @@ recordings/
 *.jpeg
 *.gif
 *.webm
+test/.tmp/
+.tmp/
 !docs/**/*.png
 !docs/**/*.gif
 
@@ -31,3 +33,6 @@ recordings/
 .env
 .env.local
 .env.*.local
+
+# Agents
+.agents

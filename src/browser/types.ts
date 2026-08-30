@@ -73,6 +73,7 @@ export interface ScreenshotOptions {
 
 export interface ScreenshotResult {
   base64?: string;
+  data?: Uint8Array;
   mimeType: string;
   outputPath?: string;
   fileSizeBytes?: number;
@@ -93,11 +94,21 @@ export interface ElementTarget {
   y?: number;
 }
 
+export interface CapturedFrame {
+  timestamp: number;
+  data: Uint8Array;
+  mimeType?: string;
+}
+
 export interface RecordingOptions {
   fps?: number;
   format?: "webm" | "gif";
   outputPath?: string;
   quality?: number;
+  scale?: number;
+  maxFrames?: number;
+  maxDurationMs?: number;
+  showCursor?: boolean;
 }
 
 export interface RecordingResult {
@@ -109,6 +120,8 @@ export interface RecordingResult {
   fileSizeBytes?: number;
   base64?: string;
   mimeType: string;
+  width?: number;
+  height?: number;
 }
 
 export interface AnimationRecordOptions extends RecordingOptions {

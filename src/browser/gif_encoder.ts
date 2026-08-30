@@ -17,6 +17,11 @@ export class GifEncoder {
   private frames: GifFrame[] = [];
   private loopCount: number;
 
+  // Reusable LZW tables to eliminate GC allocations per frame
+  private prefixTable = new Int32Array(4096);
+  private suffixTable = new Int32Array(4096);
+  private codeTable = new Int32Array(4096);
+
   constructor(width: number, height: number, loopCount = 0) {
     this.width = width;
     this.height = height;
@@ -189,7 +194,7 @@ export class GifEncoder {
   }
 
   /**
-   * LZW compression for GIF
+   * LZW compression for GIF with recycled table buffers
    */
   private lzwEncode(pixels: Uint8Array, minCodeSize: number): Uint8Array {
     const clearCode = 1 << minCodeSize; // 256
@@ -198,9 +203,9 @@ export class GifEncoder {
     let codeSize = minCodeSize + 1; // 9
     let nextCode = eoiCode + 1; // 258
 
-    const prefixTable = new Int32Array(4096);
-    const suffixTable = new Int32Array(4096);
-    const codeTable = new Int32Array(4096);
+    const prefixTable = this.prefixTable;
+    const suffixTable = this.suffixTable;
+    const codeTable = this.codeTable;
 
     const outBytes: number[] = [minCodeSize];
     const subBlock: number[] = [];

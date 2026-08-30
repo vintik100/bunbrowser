@@ -39,7 +39,7 @@ The project documentation is structured using the **[Diátaxis Framework](https:
   * [Persisting Sessions, Cookies, and LocalStorage](./docs/2-how-to/persistent-sessions.md)
   * [Executing Direct CDP Commands](./docs/2-how-to/cdp-raw-commands.md)
 * 📖 **[Technical Reference (Specifications)](./docs/3-reference/)**:
-  * [Complete Catalog of all 24 MCP Tools & Schemas](./docs/3-reference/mcp-tools.md)
+  * [Complete Catalog of all 30 MCP Tools & Schemas](./docs/3-reference/mcp-tools.md)
   * [Command-Line Options (CLI) & Environment Variables](./docs/3-reference/cli-options.md)
 * 💡 **[Explanation & Architecture (Concepts)](./docs/4-explanation/)**:
   * [Internal Architecture & Native Events (`isTrusted: true`)](./docs/4-explanation/architecture-bun-webview.md)
@@ -101,7 +101,7 @@ bunx @bunbrowser/mcp --width 1920 --height 1080 --url "https://bun.sh"
 
 ---
 
-## 🛠️ Complete MCP Tools Catalog (24 Tools)
+## 🛠️ Complete MCP Tools Catalog (30 Tools)
 
 ### 🌐 Navigation
 * **`browser_navigate`**: Navigate to a URL with optional accessibility snapshot.
@@ -111,7 +111,7 @@ bunx @bunbrowser/mcp --width 1920 --height 1080 --url "https://bun.sh"
 
 ### 🔍 Inspection & State
 * **`browser_snapshot`**: PRIMARY INSPECTION. Captures semantic accessibility tree with `[ref=eN]` IDs.
-* **`browser_take_screenshot`**: Visual viewport screenshot in Base64 (PNG, JPEG, WebP).
+* **`browser_take_screenshot`**: Visual viewport screenshot in Base64 (PNG, JPEG, WebP) or direct zero-copy disk save.
 * **`browser_evaluate`**: Evaluates JavaScript in page context.
 * **`browser_get_content`**: Returns full HTML markup or plain text.
 * **`browser_console_logs`**: Retrieves recorded console logs.
@@ -143,9 +143,9 @@ bunx @bunbrowser/mcp --width 1920 --height 1080 --url "https://bun.sh"
 * **`browser_lighthouse_audit`**: Full Lighthouse audit with 0-100 scores for Performance, Accessibility, Best Practices, and SEO.
 
 ### 🎬 Video Recording & Motion
-* **`browser_start_recording`**: Starts continuous video recording (`webm` or `gif`).
-* **`browser_stop_recording`**: Stops recording and exports file with duration and size metrics.
-* **`browser_record_animation`**: One-shot recording of UI transitions and keyframe animations for a given `durationMs`.
+* **`browser_start_recording`**: Starts continuous video recording (`webm` or `gif`) with scaling, compression quality, and click ripples.
+* **`browser_stop_recording`**: Stops recording and exports file with duration, frame count, dimensions, and size metrics.
+* **`browser_record_animation`**: One-shot recording of UI transitions and keyframe animations for a given `durationMs` with trigger actions.
 
 ---
 
