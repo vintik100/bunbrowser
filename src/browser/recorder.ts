@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { GifEncoder } from "./gif_encoder.js";
 import type { BrowserTab } from "./tab.js";
 import type { AnimationRecordOptions, RecordingOptions, RecordingResult } from "./types.js";
@@ -7,6 +7,17 @@ import type { AnimationRecordOptions, RecordingOptions, RecordingResult } from "
 interface CapturedFrame {
   timestamp: number;
   base64: string;
+}
+
+let gifEncoderPageSource: string | null = null;
+
+async function getGifEncoderPageSource(): Promise<string> {
+  if (!gifEncoderPageSource) {
+    const source = await Bun.file(join(import.meta.dir, "gif_encoder.ts")).text();
+    const js = new Bun.Transpiler().transformSync(source, "ts");
+    gifEncoderPageSource = js.replace(/^export\s+/, "");
+  }
+  return gifEncoderPageSource;
 }
 
 export class TabRecorder {
@@ -189,28 +200,30 @@ export class TabRecorder {
     const height = Math.min(this.tab.height, 360);
     const delayMs = Math.round(1000 / fps);
 
-    const encoder = new GifEncoder(width, height, 0);
-
     if (frames.length === 0) {
       // Empty dummy frame
+      const encoder = new GifEncoder(width, height, 0);
       const empty = new Uint8Array(width * height * 4);
       encoder.addFrame(empty, delayMs);
       return encoder.encode();
     }
 
-    // Extract RGBA pixels in browser context
+    // Encode entirely in the page: decode frames -> RGBA -> GIF, returning only the final base64.
     try {
+      const gifSource = await getGifEncoderPageSource();
       const base64List = frames.map((f) => f.base64);
-      const rgbaBatches = (await this.tab.evaluate(`
+      const gifBase64 = (await this.tab.evaluate(`
         (async () => {
+          ${gifSource}
           const frames = ${JSON.stringify(base64List)};
           const w = ${width};
           const h = ${height};
+          const delayMs = ${delayMs};
           const canvas = document.createElement('canvas');
           canvas.width = w;
           canvas.height = h;
           const ctx = canvas.getContext('2d');
-          const results = [];
+          const encoder = new GifEncoder(w, h, 0);
 
           for (const b64 of frames) {
             await new Promise((res) => {
@@ -218,33 +231,41 @@ export class TabRecorder {
               img.onload = () => {
                 ctx.clearRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
-                const imgData = ctx.getImageData(0, 0, w, h);
-                results.push(Array.from(imgData.data));
+                encoder.addFrame(ctx.getImageData(0, 0, w, h).data, delayMs);
                 res();
               };
               img.onerror = () => {
-                results.push(new Array(w * h * 4).fill(255));
+                encoder.addFrame(new Uint8ClampedArray(w * h * 4).fill(255), delayMs);
                 res();
               };
               img.src = 'data:image/png;base64,' + b64;
             });
           }
-          return results;
-        })()
-      `)) as number[][];
 
-      for (const rawRgba of rgbaBatches) {
-        encoder.addFrame(new Uint8Array(rawRgba), delayMs);
+          const bytes = encoder.encode();
+          let bin = '';
+          const chunk = 0x8000;
+          for (let i = 0; i < bytes.length; i += chunk) {
+            bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+          }
+          return btoa(bin);
+        })()
+      `)) as string;
+
+      if (gifBase64 && gifBase64.length > 0) {
+        return new Uint8Array(Buffer.from(gifBase64, "base64"));
       }
     } catch {
-      // Fallback if browser evaluation fails
-      for (let i = 0; i < frames.length; i++) {
-        const dummy = new Uint8Array(width * height * 4);
-        dummy.fill(240);
-        encoder.addFrame(dummy, delayMs);
-      }
+      // Fall through to fallback
     }
 
+    // Fallback if browser evaluation fails
+    const encoder = new GifEncoder(width, height, 0);
+    for (let i = 0; i < frames.length; i++) {
+      const dummy = new Uint8Array(width * height * 4);
+      dummy.fill(240);
+      encoder.addFrame(dummy, delayMs);
+    }
     return encoder.encode();
   }
 
