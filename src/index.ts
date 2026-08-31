@@ -1,3 +1,4 @@
+import "zod/compile";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { BrowserConfig } from "./browser/types.js";
 import { createServer } from "./server.js";
