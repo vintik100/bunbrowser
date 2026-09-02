@@ -16,7 +16,10 @@ export function registerStorageCdpTools(server: McpServer, manager: BrowserManag
           .describe(
             "CDP method name (e.g. 'Network.getCookies', 'Emulation.setUserAgentOverride', 'DOM.getDocument')"
           ),
-        params: z.record(z.string(), z.any()).optional().describe("JSON parameters object for the CDP command"),
+        params: z
+          .record(z.string(), z.any())
+          .optional()
+          .describe("JSON parameters object for the CDP command"),
       },
     },
     async ({ method, params }) => {
